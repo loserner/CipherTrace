@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:3001
+      - VITE_RPC_URL_MAINNET=https://mainnet.infura.io/v3/YOUR_INFURA_KEY
+      - VITE_RPC_URL_SEPOLIA=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+      - VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/transaction-analysis
+      - REDIS_URL=redis://redis:6379
+      - RPC_URL_MAINNET=https://mainnet.infura.io/v3/YOUR_INFURA_KEY
+      - RPC_URL_SEPOLIA=https://sepolia.infura.io/v3/YOUR_INFURA_KEY
+      - ETHERSCAN_API_KEY=your_etherscan_api_key
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # MongoDB数据库
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=transaction-analysis
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+
+  # Redis缓存
+  redis:
+    image: redis:7.2-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Hardhat本地节点
+  hardhat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.hardhat
+    ports:
+      - "8545:8545"
+    environment:
+      - HARDHAT_NETWORK=localhost
+    volumes:
+      - ./backend:/app
+      - hardhat_data:/app/data
+
+volumes:
+  mongo_data:
+  redis_data:
+  hardhat_data:
