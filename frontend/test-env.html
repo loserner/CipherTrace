@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>环境变量测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .env-var { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>环境变量测试页面</h1>
+        <p>这个页面用于测试Vite环境变量是否正确加载。</p>
+        
+        <div id="env-vars"></div>
+        
+        <h2>测试说明</h2>
+        <ul>
+            <li>如果看到绿色的"已配置"状态，说明环境变量加载成功</li>
+            <li>如果看到红色的"未配置"状态，说明环境变量没有正确加载</li>
+            <li>请确保.env文件在frontend目录下，并且变量名以VITE_开头</li>
+        </ul>
+    </div>
+
+    <script type="module">
+        // 获取所有环境变量
+        const allEnvVars = import.meta.env;
+        const viteEnvVars = Object.keys(allEnvVars)
+            .filter(key => key.startsWith('VITE_'))
+            .reduce((obj, key) => {
+                obj[key] = allEnvVars[key];
+                return obj;
+            }, {});
+
+        // 显示环境变量
+        const container = document.getElementById('env-vars');
+        
+        // 检查关键环境变量
+        const etherscanKey = viteEnvVars.VITE_ETHERSCAN_API_KEY;
+        const apiBaseUrl = viteEnvVars.VITE_API_BASE_URL;
+        
+        container.innerHTML = `
+            <div class="env-var ${etherscanKey ? 'success' : 'error'}">
+                <h3>VITE_ETHERSCAN_API_KEY</h3>
+                <p><strong>状态:</strong> ${etherscanKey ? '已配置' : '未配置'}</p>
+                ${etherscanKey ? `<p><strong>长度:</strong> ${etherscanKey.length}</p>` : ''}
+                ${etherscanKey ? `<p><strong>前缀:</strong> ${etherscanKey.substring(0, 8)}...</p>` : ''}
+            </div>
+            
+            <div class="env-var ${apiBaseUrl ? 'success' : 'error'}">
+                <h3>VITE_API_BASE_URL</h3>
+                <p><strong>状态:</strong> ${apiBaseUrl ? '已配置' : '未配置'}</p>
+                ${apiBaseUrl ? `<p><strong>值:</strong> ${apiBaseUrl}</p>` : ''}
+            </div>
+            
+            <div class="env-var info">
+                <h3>所有VITE环境变量</h3>
+                <pre>${JSON.stringify(viteEnvVars, null, 2)}</pre>
+            </div>
+        `;
+    </script>
+</body>
+</html>
